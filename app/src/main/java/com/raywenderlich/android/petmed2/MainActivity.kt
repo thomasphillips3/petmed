@@ -38,6 +38,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.toast
 import java.io.File
 import java.io.FileOutputStream
+import java.io.ObjectOutputStream
 import java.text.DateFormat
 import java.util.*
 
@@ -126,15 +127,16 @@ class MainActivity : AppCompatActivity() {
     editor.apply()
   }
 
-  //This is just for demo data
   private fun createDataSource(filename: String, outFile: File) {
-    val fileDescriptor = applicationContext.assets.openFd(filename)
-    fileDescriptor.createInputStream().use { inputStream ->
-      FileOutputStream(outFile).use { outputStream ->
-        inputStream.channel.transferTo(fileDescriptor.startOffset,
-            fileDescriptor.length,
-            outputStream.channel)
-      }
+    val inputStream = applicationContext.assets.open(filename)
+    val bytes = inputStream.readBytes()
+    inputStream.close()
+
+    val password = CharArray(login_password.length())
+    login_password.text.getChars(0, login_password.length(), password, 0)
+    val map = Encryption().encrypt(bytes, password)
+    ObjectOutputStream(FileOutputStream(outFile)).use {
+      it -> it.writeObject(map)
     }
   }
 

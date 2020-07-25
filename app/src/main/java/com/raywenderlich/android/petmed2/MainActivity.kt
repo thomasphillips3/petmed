@@ -47,104 +47,104 @@ import java.util.*
  */
 class MainActivity : AppCompatActivity() {
 
-  private var isSignedUp = false
-  private var workingFile: File? = null
+    private var isSignedUp = false
+    private var workingFile: File? = null
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_main)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
 
-    workingFile = File(filesDir.absolutePath + java.io.File.separator +
-        FileConstants.DATA_SOURCE_FILE_NAME)
+        workingFile = File(filesDir.absolutePath + java.io.File.separator +
+                FileConstants.DATA_SOURCE_FILE_NAME)
 
-    //Encryption().keystoreTest()
+        //Encryption().keystoreTest()
 
-    updateLoggedInState()
-  }
+        updateLoggedInState()
+    }
 
-  fun loginPressed(view: android.view.View) {
+    fun loginPressed(view: android.view.View) {
 
-    var success = false
-    val password = login_password.text.toString()
+        var success = false
+        val password = login_password.text.toString()
 
-    //Check if already signed up
-    if (isSignedUp) {
+        //Check if already signed up
+        if (isSignedUp) {
 
-      val lastLogin = lastLoggedIn()
-      if (lastLogin != null) {
-        success = true
-        toast("Last login: $lastLogin")
-      } else {
-        toast("Please check your password and try again.")
-      }
+            val lastLogin = lastLoggedIn()
+            if (lastLogin != null) {
+                success = true
+                toast("Last login: $lastLogin")
+            } else {
+                toast("Please check your password and try again.")
+            }
 
-    } else {
-      when {
-        password.isEmpty() -> toast("Please enter a password!")
-        password == login_confirm_password.text.toString() -> workingFile?.let {
-          createDataSource("pets.xml", it)
-          success = true
+        } else {
+            when {
+                password.isEmpty() -> toast("Please enter a password!")
+                password == login_confirm_password.text.toString() -> workingFile?.let {
+                    createDataSource("pets.xml", it)
+                    success = true
+                }
+                else -> toast("Passwords do not match!")
+            }
         }
-        else -> toast("Passwords do not match!")
-      }
+
+        if (success) {
+
+            saveLastLoggedInTime()
+
+            //Start next activity
+            val context = view.context
+            val petListIntent = Intent(context, PetListActivity::class.java)
+            petListIntent.putExtra(PWD_KEY, password.toCharArray())
+            context.startActivity(petListIntent)
+        }
     }
 
-    if (success) {
-
-      saveLastLoggedInTime()
-
-      //Start next activity
-      val context = view.context
-      val petListIntent = Intent(context, PetListActivity::class.java)
-      petListIntent.putExtra(PWD_KEY, password.toCharArray())
-      context.startActivity(petListIntent)
+    private fun updateLoggedInState() {
+        val fileExists = workingFile?.exists() ?: false
+        if (fileExists) {
+            isSignedUp = true
+            button.text = getString(R.string.login)
+            login_confirm_password.visibility = View.INVISIBLE
+        } else {
+            button.text = getString(R.string.signup)
+        }
     }
-  }
 
-  private fun updateLoggedInState() {
-    val fileExists = workingFile?.exists() ?: false
-    if (fileExists) {
-      isSignedUp = true
-      button.text = getString(R.string.login)
-      login_confirm_password.visibility = View.INVISIBLE
-    } else {
-      button.text = getString(R.string.signup)
+    private fun lastLoggedIn(): String? {
+        //Retrieve shared prefs data
+        val preferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        return preferences.getString("l", "")
     }
-  }
 
-  private fun lastLoggedIn(): String? {
-    //Retrieve shared prefs data
-    val preferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-    return preferences.getString("l", "")
-  }
+    private fun saveLastLoggedInTime() {
+        val currentDateTimeString = DateFormat.getDateTimeInstance().format(Date())
 
-  private fun saveLastLoggedInTime() {
-    val currentDateTimeString = DateFormat.getDateTimeInstance().format(Date())
-
-    //Save to shared prefs
-    val editor = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).edit()
-    editor.putString("l", currentDateTimeString)
-    editor.apply()
-  }
-
-  private fun createDataSource(filename: String, outFile: File) {
-    val inputStream = applicationContext.assets.open(filename)
-    val bytes = inputStream.readBytes()
-    inputStream.close()
-
-    val password = CharArray(login_password.length())
-    login_password.text.getChars(0, login_password.length(), password, 0)
-    val map = Encryption().encrypt(bytes, password)
-    ObjectOutputStream(FileOutputStream(outFile)).use {
-      it -> it.writeObject(map)
+        //Save to shared prefs
+        val editor = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).edit()
+        editor.putString("l", currentDateTimeString)
+        editor.apply()
     }
-  }
 
-  companion object {
-    private const val PWD_KEY = "PWD"
-  }
+    private fun createDataSource(filename: String, outFile: File) {
+        val inputStream = applicationContext.assets.open(filename)
+        val bytes = inputStream.readBytes()
+        inputStream.close()
 
-  object FileConstants {
-    const val DATA_SOURCE_FILE_NAME = "pets.xml"
-  }
+        val password = CharArray(login_password.length())
+        login_password.text.getChars(0, login_password.length(), password, 0)
+        val map = Encryption().encrypt(bytes, password)
+        ObjectOutputStream(FileOutputStream(outFile)).use { it ->
+            it.writeObject(map)
+        }
+    }
+
+    companion object {
+        private const val PWD_KEY = "PWD"
+    }
+
+    object FileConstants {
+        const val DATA_SOURCE_FILE_NAME = "pets.xml"
+    }
 }

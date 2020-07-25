@@ -47,77 +47,77 @@ import javax.crypto.spec.SecretKeySpec
 
 internal class Encryption {
 
-  fun encrypt(dataToEncrypt: ByteArray,
-              password: CharArray): HashMap<String, ByteArray> {
+    fun encrypt(dataToEncrypt: ByteArray,
+                password: CharArray): HashMap<String, ByteArray> {
 
-    val map = HashMap<String, ByteArray>()
-    val random = SecureRandom()
-    val salt = ByteArray(256)
-    random.nextBytes(salt)
+        val map = HashMap<String, ByteArray>()
+        val random = SecureRandom()
+        val salt = ByteArray(256)
+        random.nextBytes(salt)
 
-    val pbKeySpec = PBEKeySpec(password, salt, 1324, 256)
-    val secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1")
-    val keyBytes = secretKeyFactory.generateSecret(pbKeySpec).encoded
-    val keySpec = SecretKeySpec(keyBytes, "AES")
-    val ivRandom = SecureRandom()
-    val iv = ByteArray(16)
-    ivRandom.nextBytes(iv)
-    val ivSpec = IvParameterSpec(iv)
-    val cipher = Cipher.getInstance("AES/CBC/PKCS7Padding")
-    cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec)
-    val encrypted = cipher.doFinal(dataToEncrypt)
+        val pbKeySpec = PBEKeySpec(password, salt, 1324, 256)
+        val secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1")
+        val keyBytes = secretKeyFactory.generateSecret(pbKeySpec).encoded
+        val keySpec = SecretKeySpec(keyBytes, "AES")
+        val ivRandom = SecureRandom()
+        val iv = ByteArray(16)
+        ivRandom.nextBytes(iv)
+        val ivSpec = IvParameterSpec(iv)
+        val cipher = Cipher.getInstance("AES/CBC/PKCS7Padding")
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec)
+        val encrypted = cipher.doFinal(dataToEncrypt)
 
-    map["salt"] = salt
-    map["iv"] = iv
-    map["encrypted"] = encrypted
+        map["salt"] = salt
+        map["iv"] = iv
+        map["encrypted"] = encrypted
 
-    return map
-  }
+        return map
+    }
 
-  fun decrypt(map: HashMap<String, ByteArray>, password: CharArray): ByteArray? {
+    fun decrypt(map: HashMap<String, ByteArray>, password: CharArray): ByteArray? {
 
-    var decrypted: ByteArray? = null
+        var decrypted: ByteArray? = null
 
-    val salt = map["salt"]
-    val iv = map["iv"]
-    val encrypted = map["encrypted"]
+        val salt = map["salt"]
+        val iv = map["iv"]
+        val encrypted = map["encrypted"]
 
-    val pbKeySpec = PBEKeySpec(password, salt, 1324, 256)
-    val secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1")
-    val keyBytes = secretKeyFactory.generateSecret(pbKeySpec).encoded
-    val keySpec = SecretKeySpec(keyBytes, "AES")
+        val pbKeySpec = PBEKeySpec(password, salt, 1324, 256)
+        val secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1")
+        val keyBytes = secretKeyFactory.generateSecret(pbKeySpec).encoded
+        val keySpec = SecretKeySpec(keyBytes, "AES")
 
-    val cipher = Cipher.getInstance("AES/CBC/PKCS7Padding")
-    val ivSpec = IvParameterSpec(iv)
-    cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec)
-    decrypted = cipher.doFinal(encrypted)
+        val cipher = Cipher.getInstance("AES/CBC/PKCS7Padding")
+        val ivSpec = IvParameterSpec(iv)
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec)
+        decrypted = cipher.doFinal(encrypted)
 
-    return decrypted
-  }
+        return decrypted
+    }
 
-  fun keystoreEncrypt(dataToEncrypt: ByteArray): HashMap<String, ByteArray> {
+    fun keystoreEncrypt(dataToEncrypt: ByteArray): HashMap<String, ByteArray> {
 
-    val map = HashMap<String, ByteArray>()
+        val map = HashMap<String, ByteArray>()
 
-    //TODO: Add code here
+        //TODO: Add code here
 
-    return map
-  }
+        return map
+    }
 
-  fun keystoreDecrypt(map: HashMap<String, ByteArray>): ByteArray? {
+    fun keystoreDecrypt(map: HashMap<String, ByteArray>): ByteArray? {
 
-    var decrypted: ByteArray? = null
+        var decrypted: ByteArray? = null
 
-    //TODO: Add code here
+        //TODO: Add code here
 
-    return decrypted
-  }
+        return decrypted
+    }
 
-  @TargetApi(23)
-  fun keystoreTest() {
+    @TargetApi(23)
+    fun keystoreTest() {
 
-    //TODO: Add code here
+        //TODO: Add code here
 
-  }
+    }
 }
 

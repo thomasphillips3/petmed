@@ -113,17 +113,45 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun lastLoggedIn(): String? {
+        val password = CharArray(login_password.length())
+        login_password.text.getChars(0, login_password.length(), password, 0)
+
         //Retrieve shared prefs data
         val preferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-        return preferences.getString("l", "")
+        val base64Encrypted = preferences.getString("l", "")
+        val base64Salt = preferences.getString("lsalt", "")
+        val base64Iv = preferences.getString("liv", "")
+
+        val encrypted = Base64.decode(base64Encrypted, Base64.NO_WRAP)
+        val iv = Base64.decode(base64Iv, Base64.NO_WRAP)
+        val salt = Base64.decode(base64Salt, Base64.NO_WRAP)
+
+        val decrypted = Encryption().decrypt(
+                hashMapOf("iv" to iv, "salt" to salt, "encrypted" to encrypted), password)
+
+        var lastLoggedIn: String? = null
+        decrypted?.let {
+            lastLoggedIn = String(it, Charsets.UTF_8)
+        }
+
+        return lastLoggedIn
     }
 
     private fun saveLastLoggedInTime() {
+        val password = CharArray(login_password.length())
+        login_password.text.getChars(0, login_password.length(), password, 0)
         val currentDateTimeString = DateFormat.getDateTimeInstance().format(Date())
+        val map = Encryption().encrypt(currentDateTimeString.toByteArray(Charsets.UTF_8), password)
 
-        //Save to shared prefs
+        val valueBase64String = Base64.encodeToString(map["encrypted"], Base64.NO_WRAP)
+        val saltBase64String = Base64.encodeToString(map["salt"], Base64.NO_WRAP)
+        val ivBase64String = Base64.encodeToString(map["iv"], Base64.NO_WRAP)
+
         val editor = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).edit()
-        editor.putString("l", currentDateTimeString)
+
+        editor.putString("l", valueBase64String)
+        editor.putString("lsalt", saltBase64String)
+        editor.putString("liv", ivBase64String)
         editor.apply()
     }
 
